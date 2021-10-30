@@ -183,7 +183,7 @@ void update() {
       ball.velx *= ENERGYLOSS;
       ball.velz *= ENERGYLOSS;
       ball.vely *= ENERGYLOSS;       
-      }
+      
     } 
      
     pushMatrix(); 
