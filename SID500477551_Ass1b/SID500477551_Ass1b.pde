@@ -3,7 +3,7 @@
 2.ball falls to ground due to gravity
 3. ball spin determined by original direction and bounces
 4. ball on ball collision 
-5. potential energy decay with time and collisions
+5. potential energy decay 
 */
 
 final int SIZE = 1000;
@@ -13,17 +13,20 @@ final float ENERGYLOSS = 0.95;
 final float gravity = 0.5;
 final float bounce = -1;
 ArrayList<Ball> balls = new ArrayList<Ball>();
+
 class Ball {
-  
+  //position components
   float xpos, ypos, zpos;
-  float oldxpos, oldypos, oldzpos;
+  //velocity components
   float velx, vely, velz;
+  //rotational velocity components
+  // (only using rotX currentlya)
   float rotX, rotY, rotZ;
+  //define size of ball.
   float radius = 100;
   
   PShape shape = createShape(SPHERE,radius);
   boolean moving = true;
-  
   Ball lastCollision = null;
   Ball(float x, float y, float z, float vx, float vy, float vz) {
     xpos = x;
@@ -42,8 +45,12 @@ void setup() {
  size(1000, 1000, P3D);
 }
 
+/*
+  when mouse is clicked, create a ball with random trajectory.
+  Do not create the ball if there is a ball in the way.
+*/
 void mouseClicked() {
-  Ball ball = new Ball(float(mouseX), float(mouseY), 0.0,random(-10, 10),gravity + random(-10, 10),random(1, 10));
+  Ball ball = new Ball(float(mouseX), float(mouseY), 0.0,random(-START_VELOCITY, START_VELOCITY),gravity + random(-START_VELOCITY, START_VELOCITY),random(1, START_VELOCITY));
   boolean newBall = true;
   for (Ball ball2 : balls) {
     if (distance(ball,ball2) < ball.radius*2) {
@@ -54,12 +61,10 @@ void mouseClicked() {
     balls.add(ball);
 }
 
+//draw walls and call update (which does all ball related stuff)
 void draw() {
   clear();
   background(0);
-  lights();
-  
-  
   
   pushMatrix();
   translate(width/2, height/2, 400);
@@ -67,13 +72,17 @@ void draw() {
   fill(0, 255, 255, 100);
   put_a_cube_at_here(); 
   popMatrix();
+  
+  hint(ENABLE_DEPTH_TEST);
   noStroke();
-  update();
   fill(255);
-
-
+  update();
+  
 }
 
+/*
+  calculate distance between two balls
+*/
 double distance(Ball ball, Ball ball2) {
   return Math.sqrt (
           (ball2.xpos - ball.xpos) * (ball2.xpos - ball.xpos) 
@@ -125,6 +134,11 @@ void wallCollision(Ball ball) {
   } 
 }
 
+
+/*
+  cycles through all balls. detects collisions and calculates velocities.
+  draws ball.
+*/
 void update() {
  boolean colliding;
  for (int i = 0; i < balls.size(); i ++) {
@@ -151,14 +165,11 @@ void update() {
     // stop the y velocity growing large when on the ground
     if (ball.ypos < 1000){
         ball.vely += gravity; 
-    }else if(ball.vely > 0)
-      {
-      
+    } else if(ball.vely > 0) {
        ball.moving = false;
        ball.vely = 0;
       }
-    
-    
+     
     // ball wont move when velocities have small magnitude.
     if(abs(ball.vely) > THRESH) 
       ball.ypos += ball.vely;
@@ -167,18 +178,11 @@ void update() {
     if(abs(ball.velz) > THRESH)
       ball.zpos -= ball.velz;
     
-    
     // something rolling on the ground should continiously lose energy
-    if(ball.ypos >= 1000) {
-      
+    if(ball.ypos >= 1000) {    
       ball.velx *= ENERGYLOSS;
       ball.velz *= ENERGYLOSS;
-      ball.vely *= ENERGYLOSS;
-      if(colliding && ball.lastCollision.ypos < 1000) {
-        //ball.lastCollision.vely -= gravity;
-        
-        
-        
+      ball.vely *= ENERGYLOSS;       
       }
     } 
      
@@ -192,7 +196,9 @@ void update() {
 }
  
    
-   
+/*
+  exchanges momentum between two balls.
+*/
 void collision(Ball b1, Ball b2) {
   
   if (!b1.moving && b2.moving) {
@@ -261,6 +267,9 @@ void collision(Ball b1, Ball b2) {
   //System.out.println(nvz);  
 }
 
+/*
+  defintion of cube.
+*/
 void put_a_cube_at_here(){
   beginShape();
   stroke(255);
